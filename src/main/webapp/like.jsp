@@ -5,13 +5,13 @@
     pageEncoding="UTF-8"%>
 <%
 	User user = (User) session.getAttribute("loginUser");
+	int boardNo = Integer.parseInt(request.getParameter("no"));
 
 	if (user == null) {
 		response.sendRedirect("loginform.jsp?fail=deny");
 		return;
 		}
 
-	int boardNo = Integer.parseInt(request.getParameter("no"));
 	BoardDao boardDao = BoardDao.getInstance();
 	Board board = boardDao.getBoard(boardNo);
 	
@@ -19,6 +19,7 @@
 		response.sendRedirect("list.jsp?page=1&fail=invalid");
 		return;
 	}
+	
 	if (user.getNo() == board.getWriterNo() || boardDao.getBoardLikeUser(boardNo, user.getNo())!=null) {
 		response.sendRedirect("detail.jsp?no="+boardNo+"&fail=deny");
 		return;

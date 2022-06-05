@@ -1,3 +1,4 @@
+<%@page import="vo.Pagination"%>
 <%@page import="dao.UserDao"%>
 <%@page import="vo.Board"%>
 <%@page import="dao.BoardDao"%>
@@ -55,39 +56,26 @@
 			
 			// 페이지 데이터 조회 설정
 			BoardDao boardDao = BoardDao.getInstance();
-			// 한 페이지에 보여줄 데이터 행의 개수
-			int rows = 5;
-			// 전체 데이터 행의 개수
-			int records = boardDao.getTotalRowCount();
-			// 총 페이지 개수
-			int totalPages = (int) Math.ceil((double)records/rows);
+			int currentPage = Integer.parseInt(request.getParameter("page"));
+			int totalRowCount = boardDao.getTotalRowCount();
 			
-			// 페이지 블록 설정
-			// 한 화면에 보여줄 페이지의 개수
-			int pages = 5;
-			// 총 페이지 블록의 개수
-			int totalBlocks = (int) Math.ceil((double)totalPages/pages);
-
-			// 현재 요청한 페이지번호 조회
-			String value = request.getParameter("page");
-			int currentPage = Integer.parseInt(value);
-  			if (currentPage <=0 || currentPage > totalPages) {
-  				response.sendRedirect("list.jsp?page=1");
-  				return;
-  			}
-  			
-			// 현재 페이지에 해당되는 데이터 행 범위 계산(sql에서 불러올 범위)
-			int beginIndex = (currentPage - 1)*rows + 1;
-			int endIndex = currentPage*rows;
+			// 페이징을 위한 값들을 계산하는 pagination 객체 생성
+			// 한 화면에 표시할 데이터 개수의 기본값: 5, 화면에 표시할 페이지 번호 개수의 기본값: 5
+			Pagination pagination = new Pagination(totalRowCount, currentPage);
+			// init() 메소드는 총 페이지 번호 수, 데이터 조회 범위, 페이지 출력 범위 등을 계산해 멤버변수에 저장한다.
+			// totalRowCount가 0일 경우 즉시 메소드를 종료시킨다. (값이 모두 0인 상태로 남음 -> 아무것도 조회되지 않는다.)
+			pagination.init(); 
+			
+			int totalPages = pagination.getTotalPages();
+			int beginIndex = pagination.getBeginIndex();
+			int endIndex = pagination.getEndIndex();
+			int beginPage = pagination.getBeginPage();
+			int endPage = pagination.getEndPage();
+			
 			// 현재 페이지의 데이터 조회하기
 			List<Board> boards = boardDao.getBoards(beginIndex, endIndex);
 
-			// 현재 페이지 블록 계산
-			int currentBlock = (int) Math.ceil((double)currentPage/pages);
-			// 현재 화면에 표시되는 페이지 범위 계산
-			int beginPage = (currentBlock - 1)*pages + 1;
-			int endPage = (currentBlock >= totalBlocks ? totalPages : currentBlock*pages);
-		%>
+			%>
 			<p>
 				게시글 목록을 확인하세요
 				<!-- 
@@ -160,7 +148,7 @@
 					}
 				%>
 					<li class="page-item">
-						<a class="page-link <%=currentPage >= totalPages ? "disabled" : "" %>" href="list.jsp?page=<%=currentPage +1 %>">다음</a>
+						<a class="page-link <%=currentPage == totalPages ? "disabled" : "" %>" href="list.jsp?page=<%=currentPage +1 %>">다음</a>
 					</li>
 				</ul>
 			</nav>
