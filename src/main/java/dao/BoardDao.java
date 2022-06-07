@@ -5,8 +5,8 @@ import java.util.List;
 
 import helper.DaoHelper;
 import vo.Board;
-import vo.BoardDetailDto;
 import vo.BoardLikeUser;
+import vo.User;
 
 public class BoardDao {
 
@@ -59,19 +59,25 @@ public class BoardDao {
 	
 	// 범위로 게시물 조회하기 (board_deleted는 'N')
 	public List<Board> getBoards(int beginIndex, int endIndex) throws SQLException {
-		String sql = "SELECT BOARD_NO, BOARD_TITLE, WRITER_NO, BOARD_CONTENT, BOARD_VIEW_COUNT, BOARD_LIKE_COUNT, BOARD_CREATED_DATE "
+		String sql = "SELECT B.BOARD_NO, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE "
 				+ "FROM (SELECT ROW_NUMBER() OVER (ORDER BY BOARD_NO DESC) ROW_NUMBER, "
 				+ "        BOARD_NO, BOARD_TITLE, WRITER_NO, BOARD_CONTENT, BOARD_VIEW_COUNT, BOARD_LIKE_COUNT, BOARD_CREATED_DATE "
 				+ "        FROM SAMPLE_BOARDS "
-				+ "        WHERE BOARD_DELETED = 'N') "
-				+ "WHERE ROW_NUMBER >= ? AND ROW_NUMBER <= ?";
+				+ "        WHERE BOARD_DELETED = 'N') B, SAMPLE_BOARD_USERS U "
+				+ "WHERE B.WRITER_NO = U.USER_NO "
+				+ "AND ROW_NUMBER >= ? AND ROW_NUMBER <= ?";
 		
 
 		return daoHelper.selectList(sql, rs -> {
 			Board board = new Board();
 			board.setNo(rs.getInt("board_no"));
 			board.setTitle(rs.getString("board_title"));
-			board.setWriterNo(rs.getInt("writer_no"));
+			
+			User user = new User();
+			user.setNo(rs.getInt("writer_no"));
+			user.setName(rs.getString("user_name"));
+			board.setWriter(user);
+			
 			board.setContent(rs.getString("board_content"));
 			board.setViewCount(rs.getInt("board_view_count"));
 			board.setLikeCount(rs.getInt("board_like_count"));
@@ -83,42 +89,22 @@ public class BoardDao {
 	
 	// 번호로 게시물 정보 조회하기
 	public Board getBoard(int no) throws SQLException {
-		String sql = "SELECT BOARD_NO, BOARD_TITLE, WRITER_NO, BOARD_CONTENT, BOARD_VIEW_COUNT, BOARD_LIKE_COUNT, BOARD_CREATED_DATE, BOARD_UPDATED_DATE "
-				+ "FROM SAMPLE_BOARDS "
-				+ "WHERE BOARD_NO = ? "
-				+ "AND BOARD_DELETED = 'N' ";
+		String sql =  "SELECT B.BOARD_NO, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE "
+				+ "FROM SAMPLE_BOARDS B, SAMPLE_BOARD_USERS U "
+				+ "WHERE B.BOARD_NO = ? "
+				+ "AND B.WRITER_NO = U.USER_NO ";
 		
 
 		return daoHelper.selectOne(sql, rs -> {
 			Board board = new Board();
 			board.setNo(rs.getInt("board_no"));
 			board.setTitle(rs.getString("board_title"));
-			board.setWriterNo(rs.getInt("writer_no"));
-			board.setContent(rs.getString("board_content"));
-			board.setViewCount(rs.getInt("board_view_count"));
-			board.setLikeCount(rs.getInt("board_like_count"));
-			board.setCreatedDate(rs.getDate("board_created_date"));
-			board.setUpdatedDate(rs.getDate("board_updated_date"));
-			board.setDeleted("N");
-			return board;
-		}, no);
-	}
-	
-	// 번호로 게시물 상세정보 조회하기
-	public BoardDetailDto getBoardDetailByNo(int no) throws SQLException {
-		String sql = "SELECT B.BOARD_NO, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME WRITER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE "
-				+ "FROM SAMPLE_BOARDS B, SAMPLE_BOARD_USERS U "
-				+ "WHERE B.BOARD_NO = ? "
-				+ "AND B.BOARD_DELETED = 'N' "
-				+ "AND B.WRITER_NO = U.USER_NO "
-				+ "ORDER BY BOARD_NO DESC";
-		
-		return daoHelper.selectOne(sql, rs -> {
-			BoardDetailDto board = new BoardDetailDto();
-			board.setNo(rs.getInt("board_no"));
-			board.setTitle(rs.getString("board_title"));
-			board.setWriterNo(rs.getInt("writer_no"));
-			board.setWriter(rs.getString("writer_name"));
+			
+			User user = new User();
+			user.setNo(rs.getInt("writer_no"));
+			user.setName(rs.getString("user_name"));
+			board.setWriter(user);
+			
 			board.setContent(rs.getString("board_content"));
 			board.setViewCount(rs.getInt("board_view_count"));
 			board.setLikeCount(rs.getInt("board_like_count"));
@@ -135,7 +121,7 @@ public class BoardDao {
 				+ "values "
 				+ "(sample_boards_seq.nextval, ?, ?, ?) ";
 		
-		daoHelper.insert(sql, board.getTitle(), board.getWriterNo(), board.getContent());
+		daoHelper.insert(sql, board.getTitle(), board.getWriter().getNo(), board.getContent());
 	}
 
 	

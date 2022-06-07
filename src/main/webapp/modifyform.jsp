@@ -1,8 +1,9 @@
+<%@page import="util.StringUtil"%>
 <%@page import="vo.Board"%>
 <%@page import="vo.User"%>
 <%@page import="dao.BoardDao"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+    pageEncoding="UTF-8" errorPage="error/500.jsp"%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -28,36 +29,37 @@
 			// 로그인 유효성 검사
 			User user = (User) session.getAttribute("loginUser");
 			int boardNo = Integer.parseInt(request.getParameter("no"));
+			int currentPage = StringUtil.stringToInt(request.getParameter("page"), 1);
 			
 			if (user == null) {
 				response.sendRedirect("loginform.jsp?fail=deny");
 				return;
 			}
 			
+			// 게시글 유효성 검사
 			BoardDao boardDao = BoardDao.getInstance();
 			Board board = boardDao.getBoard(boardNo);
 	
 			if (board == null) {
-				response.sendRedirect("list.jsp?page=1&fail=invalid");
-				return;
+				throw new RuntimeException("게시글이 존재하지 않습니다.");
 			}
 			
-			if (board.getWriterNo() != user.getNo()) {
-				response.sendRedirect("list.jsp?page=1&fail=deny");
-				return;
+			if (board.getWriter().getNo() != user.getNo()) {
+				throw new RuntimeException("다른 사람의 게시글을 수정할 수 없습니다.");
 			}
 			
 		%>
 			<p>제목과 내용을 입력하세요. <p>
-			<form class="border bg-light p-3" method="post" action="modify.jsp">
+			<form class="border bg-light p-3" method="post" action="modify.jsp" onsubmit="return submitBoardForm()">
 				<input type="hidden" name="no" value="<%=boardNo %>" />
+				<input type="hidden" name="page" value="<%=currentPage %>" />
 				<div class="mb-3">
 					<label class="form-label">제목</label>
 					<input type="text" class="form-control" name="title" value="<%=board.getTitle() %>"/>
 				</div>
 				<div class="mb-3">
 					<label class="form-label">내용</label>
-					<textarea rows="10" class="form-control" name="content"><%=board.getContent() %></textarea>
+					<textarea rows="10" class="form-control" name="content"><%=board.getHtmlContent() %></textarea>
 				</div>
 				<div class="text-end">
 					<a href="detail.jsp?no=<%=boardNo %>" class="btn btn-secondary">취소</a>
@@ -68,5 +70,22 @@
 	</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript">
+	function submitBoardForm() {
+		let titleField = document.querySelector("input[name=title]");
+		if (titleField.value === '') {
+			alert("제목은 필수입력값입니다.");
+			titleField.focus();
+			return false;
+		}
+		let contentField = document.querySelector("textarea[name=content]");
+		if (contentField.value === '') {
+			alert("내용은 필수입력값입니다.");
+			contentField.focus();
+			return false;
+		}
+		return true;
+	}
+</script>
 </body>
 </html>

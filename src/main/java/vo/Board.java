@@ -6,7 +6,7 @@ public class Board {
 	
 	private int no;
 	private String title;
-	private int writerNo;
+	private User writer;
 	private String content;
 	private int viewCount;
 	private int likeCount;
@@ -32,12 +32,12 @@ public class Board {
 		this.title = title;
 	}
 
-	public int getWriterNo() {
-		return writerNo;
+	public User getWriter() {
+		return writer;
 	}
 
-	public void setWriterNo(int writerNo) {
-		this.writerNo = writerNo;
+	public void setWriter(User writer) {
+		this.writer = writer;
 	}
 
 	public String getContent() {
@@ -46,6 +46,10 @@ public class Board {
 
 	public void setContent(String content) {
 		this.content = content;
+	}
+	
+	public String getHtmlContent() {
+		return content.replaceAll(System.lineSeparator(), "<br />");
 	}
 
 	public int getViewCount() {

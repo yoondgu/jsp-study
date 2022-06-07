@@ -1,10 +1,11 @@
+<%@page import="util.StringUtil"%>
+<%@page import="vo.Board"%>
 <%@page import="vo.BoardLikeUser"%>
 <%@page import="java.util.List"%>
 <%@page import="vo.User"%>
-<%@page import="vo.BoardDetailDto"%>
 <%@page import="dao.BoardDao"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+    pageEncoding="UTF-8" errorPage="error/500.jsp"%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -29,30 +30,34 @@
 	</div>
 	<div class="row">
 		<div class="col">
-		<%
-			// 추천 오류 발생 시
-			String fail = request.getParameter("fail");
-			if ("deny".equals(fail)) {
-		%>
-			<div class="alert alert-danger">
-				<strong>접근 제한</strong> 해당 기능에 대한 권한이 없습니다.
-			</div>
-		<%				
-			}
-		%>
 		<!--
 			요청파라미터에서 게시글 번호를 조회하고, 게시글 번호에 맞는 글 정보를 조회해서 출력한다.
 		-->
 		<%
 			// 로그인 정보 조회
 			User user = (User) session.getAttribute("loginUser");
+
+			// 요청파라미터 조회
+			int boardNo = Integer.parseInt(request.getParameter("no"));
+			int currentPage = StringUtil.stringToInt(request.getParameter("page"), 1);
 			
 			// 요청한 게시글 정보 조회
-			int boardNo = Integer.parseInt(request.getParameter("no"));
 			BoardDao boardDao = BoardDao.getInstance();
+			Board board = boardDao.getBoard(boardNo);
 			
-			// 게시글 정보 조회
-			BoardDetailDto board = boardDao.getBoardDetailByNo(boardNo);
+			// 잘못된 URL 에러처리
+			if (board == null) {
+				throw new RuntimeException("게시글 정보가 존재하지 않습니다.");
+			}
+			
+			// 로그인 사용자와 작성자가 다르면 조회수를 1 증가시킨다.
+			if (user == null || board.getWriter().getNo() != user.getNo()) {
+				board.setViewCount(board.getViewCount() + 1);
+				boardDao.updateBoard(board);
+			}
+			
+			// 게시글을 추천한 사용자명 조회
+			List<String> likeUserNames = boardDao.getLikeUserNames(boardNo);
 		%>
 			<p>게시글 정보를 확인하세요.<p>
 			
@@ -76,20 +81,26 @@
 							<!--  
 								이 버튼을 클릭하면 이 글을 추천한 사용자 리스트를 표시하는 모달창이 표시됩니다.
 							-->
+						<%
+							if (!likeUserNames.isEmpty()) {
+						%>
 							<button type="button" class="btn btn-outline-primary btn-sx" data-bs-toggle="modal" data-bs-target="#modal-like-users">
 								상세보기
 							</button>
+						<%
+							}
+						%>
 						</td>
 					</tr>
 					<tr>
 						<th class="table-light text-center">작성자</th>
-						<td><%=board.getWriter() %></td>
+						<td><%=board.getWriter().getName() %></td>
 						<td class="table-light text-center">등록일</td>
 						<td><%=board.getCreatedDate() %></td>
 					</tr>
 					<tr>
 						<th class="table-light text-center">내용</th>
-						<td colspan="3"><%=board.getContent() %></td>
+						<td colspan="3"><%=board.getHtmlContent() %></td>
 					</tr>
 				</tbody>
 			</table>
@@ -104,20 +115,23 @@
 				로그인한 사용자가 이 게시글에 대해서 좋아요를 등록한 경우 추천 버튼을 비활성화한다. 
 			-->
 		<%
-			if (user == null) {
-		%>
-			<a href="modifyform.jsp?no=<%=boardNo %>" class="btn btn-secondary disabled">수정</a>
-			<a href="delete.jsp?no=<%=boardNo %>" class="btn btn-secondary disabled">삭제</a>
-			<a href="like.jsp?no=<%=boardNo %>" class="btn btn-secondary float-end disabled">추천</a>
-		<%
-			} else {
-		%>
-			<a href="modifyform.jsp?no=<%=boardNo %>" class="btn <%=user.getNo() != board.getWriterNo()? "btn-secondary disabled" : "btn-warning" %>">수정</a>
-			<a href="delete.jsp?no=<%=boardNo %>" class="btn <%=user.getNo() != board.getWriterNo()? "btn-secondary disabled" : "btn-danger" %>">삭제</a>
-			<a href="like.jsp?no=<%=boardNo %>" class="btn float-end <%=user.getNo() == board.getWriterNo() || boardDao.getBoardLikeUser(boardNo, user.getNo())!=null ? "btn-secondary disabled" : "btn-success" %>">추천</a>
-		<%
+			boolean isDisabled = true;
+			if (user != null && board.getWriter().getNo() == user.getNo()) {
+				isDisabled = false;
 			}
 		%>
+			<a href="modifyform.jsp?no=<%=boardNo %>&page=<%=currentPage %>" class="btn <%=isDisabled ? "btn-secondary disabled" : "btn-warning" %>">수정</a>
+			<a href="delete.jsp?no=<%=boardNo %>&page=<%=currentPage %>" class="btn <%=isDisabled ? "btn-secondary disabled" : "btn-danger" %>">삭제</a>
+		<%
+			isDisabled = true;
+			if (user != null) {
+				BoardLikeUser boardLikeUser = boardDao.getBoardLikeUser(boardNo, user.getNo());
+				if (user.getNo() != board.getWriter().getNo() && boardLikeUser == null) {
+					isDisabled = false;
+				}
+			}
+		%>
+			<a href="like.jsp?no=<%=boardNo %>&page=<%=currentPage %>" class="btn float-end <%=isDisabled ? "btn-secondary disabled" : "btn-success" %>">추천</a>
 		</div>
 	</div>
 	<!--  
@@ -135,19 +149,11 @@
 					이 게시글에 좋아요를 클릭한 사용자명을 아래에 표시합니다.
 				-->
 				<%
-					List<String> likeUserNames = boardDao.getLikeUserNames(boardNo);
 				
-					if (likeUserNames.isEmpty()) {
-				%>
-					<span>이 게시글을 추천한 사용자가 없습니다.</span>
-				<%
-					} else {
-					
-						for (String name : likeUserNames) {
+					for (String name : likeUserNames) {
 				%>
 					<span class="badge text-bg-secondary p-2"><%=name %></span>
 				<%
-						}
 					}
 				%>
 				</div>

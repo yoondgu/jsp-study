@@ -1,5 +1,15 @@
+<%@page import="vo.User"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<%
+	// 로그인 유효성 검사
+	User user = (User) session.getAttribute("loginUser");
+	
+	if (user == null) {
+		response.sendRedirect("loginform.jsp?fail=deny");
+		return;
+	}
+%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -22,7 +32,7 @@
 	<div class="row">
 		<div class="col">
 			<p>제목과 내용을 입력하세요. <p>
-			<form class="border bg-light p-3" method="post" action="add.jsp">
+			<form class="border bg-light p-3" method="post" action="add.jsp" onsubmit="return submitBoardform()">
 				<div class="mb-3">
 					<label class="form-label">제목</label>
 					<input type="text" class="form-control" name="title" />
@@ -40,5 +50,22 @@
 	</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript">
+	function submitBoardForm() {
+		let titleField = document.querySelector("input[name=title]");
+		if (titleField.value === '') {
+			alert("제목은 필수입력값입니다.");
+			titleField.focus();
+			return false;
+		}
+		let contentField = document.querySelector("textarea[name=content]");
+		if (contentField.value === '') {
+			alert("내용은 필수입력값입니다.");
+			contentField.focus();
+			return false;
+		}
+		return true;
+	}
+</script>
 </body>
 </html>

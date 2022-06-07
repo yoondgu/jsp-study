@@ -16,7 +16,7 @@
 	String content = request.getParameter("content");
 	
 	Board board = new Board();
-	board.setWriterNo(user.getNo());
+	board.setWriter(user);
 	board.setTitle(title);
 	board.setContent(content);
 	

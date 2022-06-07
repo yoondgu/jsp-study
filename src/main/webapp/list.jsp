@@ -1,3 +1,4 @@
+<%@page import="util.StringUtil"%>
 <%@page import="vo.Pagination"%>
 <%@page import="dao.UserDao"%>
 <%@page import="vo.Board"%>
@@ -27,36 +28,14 @@
 	</div>
 	<div class="row">
 		<div class="col">
-				<%
-			String fail = request.getParameter("fail");
-		
-			if ("invalid".equals(fail)) {
-		%>
-			<!--
-				잘못된 URL로 접근했을 경우 아래 내용을 출력한다.
-			-->
-			<div class="alert alert-danger">
-				<strong>접근 오류</strong> 유효하지 않은 요청입니다.
-			</div>
-		<%
-			} else if ("deny".equals(fail)) {
-		%>
-			<div class="alert alert-danger">
-				<strong>접근 제한</strong> 해당 기능에 대한 권한이 없습니다.
-			</div>
-		<%
-			}
-		%>
 		<!--
 			요청파라미터에서 요청한 페이지 번호를 조회하고, 페이지번호에 맞는 목록을 출력한다.
 			페이징처리에 필요한 작업을 수행한다.
 		-->
 		<%
-			User user = (User) session.getAttribute("loginUser");
-			
 			// 페이지 데이터 조회 설정
 			BoardDao boardDao = BoardDao.getInstance();
-			int currentPage = Integer.parseInt(request.getParameter("page"));
+			int currentPage = StringUtil.stringToInt(request.getParameter("page"), 1);
 			int totalRowCount = boardDao.getTotalRowCount();
 			
 			// 페이징을 위한 값들을 계산하는 pagination 객체 생성
@@ -82,6 +61,9 @@
 					비로그인 상태에서는 아래 새 글쓰기 버튼을 비활성화한다.
 					class 속성에 disabled를 추가하면 비활성화된다.
 				--> 
+			<%
+				User user = (User) session.getAttribute("loginUser");
+			%>
 				<a href="form.jsp" class="btn btn-primary btn-sm float-end <%=user==null ? "disabled" : "" %>" >새 글쓰기</a>
 			<p>
 			
@@ -106,14 +88,12 @@
 				</thead>
 				<tbody class="table-group-divider">
 				<%
-					UserDao userDao = UserDao.getInstance();
 					for (Board board : boards) {
-						User writer = userDao.getUserByNo(board.getWriterNo()); // board의 멤버변수 writer 타입을 User로 해도된다.
 				%>
 					<tr>
 						<td><%=board.getNo() %></td>
-						<td><a href="view.jsp?no=<%=board.getNo() %>"><%=board.getTitle() %></a></td>
-						<td><%=writer.getName() %></td>
+						<td><a href="detail.jsp?no=<%=board.getNo() %>&page=<%=currentPage %>"><%=board.getTitle() %></a></td>
+						<td><%=board.getWriter().getName() %></td>
 						<td><%=board.getViewCount() %></td>
 						<td><%=board.getLikeCount() %></td>
 						<td><%=board.getCreatedDate() %></td>
