@@ -13,6 +13,7 @@ public class Board {
 	private String deleted;
 	private Date createdDate;
 	private Date updatedDate;
+	private String filename;
 	
 	public Board() {}
 
@@ -90,6 +91,14 @@ public class Board {
 
 	public void setUpdatedDate(Date updatedDate) {
 		this.updatedDate = updatedDate;
+	}
+	
+	public String getFilename() {
+		return filename;
+	}
+	
+	public void setFilename(String filename) {
+		this.filename = filename;
 	}
 	
 }
