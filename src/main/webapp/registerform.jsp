@@ -46,11 +46,12 @@
 			}
 		%>
 			<p>아이디, 비밀번호, 이름, 이메일을 입력하세요</p>
-			<form class="border bg-light p-3" method="post" action="register.jsp">
+			<form class="border bg-light p-3" method="post" action="register.jsp" onsubmit="return submitRegisterForm();">
 				<div class="row g-3">
 					<div class="col-6">
 						<label class="form-label">아이디</label>
-						<input type="text" class="form-control" name="id">
+						<input type="text" class="form-control" name="id" onkeyup="idCheck();">
+						<div id="id-helper" class="form-text"></div>
 					</div>
 					<div class="col-6">
 						<label class="form-label">비밀번호</label>
@@ -62,7 +63,8 @@
 					</div>
 					<div class="col-6">
 						<label class="form-label">이메일</label>
-						<input type="text" class="form-control" name="email">
+						<input type="text" class="form-control" name="email" onkeyup="emailCheck();">
+						<div id="email-helper" class="form-text"></div>
 					</div>
 					<div class="col-12 text-end">
 						<a href="home.jsp" class="btn btn-secondary">취소</a>
@@ -74,5 +76,148 @@
 	</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript">
+	let isIdChecked = false;
+	let isEmailChecked = false;
+	
+	function idCheck() {
+		let idValue = document.querySelector("input[name=id]").value;
+		let idHelperEl = document.getElementById("id-helper");
+		
+		let classList = idHelperEl.classList;
+		classList.remove("text-danger","text-success");
+		
+		if (idValue === "") {
+			classList.add("text-danger");
+			idHelperEl.textContent = "아이디는 필수 입력값입니다.";
+			isIdChecked = false;
+			return;
+		}
+		
+		if (idValue.length < 3) {
+			classList.add("text-danger");
+			idHelperEl.textContent = "아이디는 3글자 이상 20글자 이하여야 합니다.";
+			isIdChecked = false;
+			return;
+		}
+		
+		if (idValue.length > 20) {
+			classList.add("text-danger");
+			idHelperEl.textContent = "아이디는 3글자 이상 20글자 이하여야 합니다.";
+			isIdChecked = false;
+			return;
+		}
+		
+		// ajax로 아이디 중복체크하기
+		let xhr = new XMLHttpRequest();
+		
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				let jsonText = xhr.responseText;
+				let result = JSON.parse(jsonText);
+				console.log(result.exist);
+				if (result.exist) {
+					classList.add("text-danger");
+					idHelperEl.textContent = "사용할 수 없는 아이디입니다.";
+					isIdChecked = false;
+					return;
+				} else {
+					classList.add("text-success");
+					idHelperEl.textContent = "사용가능한 아이디입니다.";
+					isIdChecked = true;
+				}
+			}
+		}
+		
+		xhr.open("GET", "idcheck.jsp?id=" + idValue);
+		xhr.send();
+	}
+	
+	function emailCheck() {
+		let emailValue = document.querySelector("input[name=email]").value;
+		let emailHelperEl = document.getElementById("email-helper");
+		
+		let classList = emailHelperEl.classList;
+		classList.remove("text-danger","text-success");
+		
+		if (emailValue === "") {
+			classList.add("text-danger");
+			emailHelperEl.textContent = "이메일은 필수 입력값입니다.";
+			isEmailChecked = false;
+			return;
+		}
+		
+		// 이메일 규정 체크
+		
+		// ajax로 이메일 중복체크하기
+		let xhr = new XMLHttpRequest();
+		
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				let jsonText = xhr.responseText;
+				let result = JSON.parse(jsonText);
+				console.log(result.exist);
+				if (result.exist) {
+					classList.add("text-danger");
+					emailHelperEl.textContent = "사용할 수 없는 이메일입니다.";
+					isEmailChecked = false;
+					return;
+				} else {
+					classList.add("text-success");
+					emailHelperEl.textContent = "사용가능한 이메일입니다.";
+					isEmailChecked = true;
+				}
+			}
+		}
+		
+		xhr.open("GET", "emailcheck.jsp?email=" + emailValue);
+		xhr.send();		
+	}
+	
+	function submitRegisterForm() {
+		
+		let idField = document.querySelector("input[name=id]");
+		if (idField.value === '') {
+			alert("아이디는 필수입력값입니다.");
+			idField.focus();
+			return false; // 폼입력값이 제출되지 않는다.
+		}
+		
+		if (!isIdChecked) {
+			alert("유효한 아이디가 아닙니다.");
+			idField.focus();
+			return false;
+		}
+		
+		let passwordField = document.querySelector("input[name=password]");
+		if (passwordField.value === '') {
+			alert("비밀번호는 필수입력값입니다.");
+			passwordField.focus();
+			return false;
+		}
+		
+		
+		let nameField = document.querySelector("input[name=name]");
+		if (nameField.value === '') {
+			alert("이름은 필수입력값입니다.");
+			nameField.focus();
+			return false;
+		}
+		
+		let emailField = document.querySelector("input[name=email]");
+		if (emailField.value === '') {
+			alert("이메일은 필수입력값입니다.");
+			emailField.focus();
+			return false;
+		}
+		
+		if (!isEmailChecked) {
+			alert("유효한 이메일이 아닙니다.");
+			emailField.focus();
+			return false;
+		}
+		return true;
+	}
+</script>
 </body>
 </html>
