@@ -99,6 +99,23 @@
 						<td><%=board.getCreatedDate() %></td>
 					</tr>
 					<tr>
+						<th class="table-light text-center">첨부파일</th>
+						<td colspan="3">
+					<%
+						if (board.getFilename() != null) {
+					%>
+							<span><%=board.getFilename() %></span>
+							<a href="download?no=<%=board.getNo() %>" class="btn btn-primary btn-sx ms-4">다운로드</a>
+					<%
+						} else {
+					%>
+							<span>없음</span>
+					<%
+						}
+					%>
+						</td>
+					</tr>
+					<tr>
 						<th class="table-light text-center">내용</th>
 						<td colspan="3"><%=board.getHtmlContent() %></td>
 					</tr>

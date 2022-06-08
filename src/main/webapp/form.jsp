@@ -32,7 +32,7 @@
 	<div class="row">
 		<div class="col">
 			<p>제목과 내용을 입력하세요. <p>
-			<form class="border bg-light p-3" method="post" action="add" enctype="multipart/form-data" onsubmit="return submitBoardform()">
+			<form class="border bg-light p-3" method="post" action="add.jsp" enctype="multipart/form-data" onsubmit="return submitBoardform()">
 				<div class="mb-3">
 					<label class="form-label">제목</label>
 					<input type="text" class="form-control" name="title" />

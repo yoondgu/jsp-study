@@ -1,3 +1,4 @@
+<%@page import="util.MultipartRequest"%>
 <%@page import="dao.BoardDao"%>
 <%@page import="vo.Board"%>
 <%@page import="vo.User"%>
@@ -12,13 +13,16 @@
 	}
 	
 	// 게시글 입력정보 조회
-	String title = request.getParameter("title");
-	String content = request.getParameter("content");
+	MultipartRequest mr = new MultipartRequest(request, "C:\\eclipse\\workspace-web\\attached-file");
+	String title = mr.getParameter("title");
+	String content = mr.getParameter("content");
+	String filename = mr.getFilename("upfile");
 	
 	Board board = new Board();
 	board.setWriter(user);
 	board.setTitle(title);
 	board.setContent(content);
+	board.setFilename(filename);
 	
 	BoardDao boardDao = BoardDao.getInstance();
 	boardDao.insertBoard(board);

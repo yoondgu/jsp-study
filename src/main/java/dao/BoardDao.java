@@ -89,7 +89,7 @@ public class BoardDao {
 	
 	// 번호로 게시물 정보 조회하기
 	public Board getBoard(int no) throws SQLException {
-		String sql =  "SELECT B.BOARD_NO, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE "
+		String sql =  "SELECT B.BOARD_NO, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE, B.BOARD_FILE_NAME "
 				+ "FROM SAMPLE_BOARDS B, SAMPLE_BOARD_USERS U "
 				+ "WHERE B.BOARD_NO = ? "
 				+ "AND B.WRITER_NO = U.USER_NO ";
@@ -109,6 +109,7 @@ public class BoardDao {
 			board.setViewCount(rs.getInt("board_view_count"));
 			board.setLikeCount(rs.getInt("board_like_count"));
 			board.setCreatedDate(rs.getDate("board_created_date"));
+			board.setFilename(rs.getString("board_file_name"));
 			board.setDeleted("N");
 			return board;
 		}, no);
@@ -117,11 +118,11 @@ public class BoardDao {
 	// 게시물 등록하기
 	public void insertBoard(Board board) throws SQLException {
 		String sql = "insert into sample_boards "
-				+ "(board_no, board_title, writer_no, board_content) "
+				+ "(board_no, board_title, writer_no, board_content, board_file_name) "
 				+ "values "
-				+ "(sample_boards_seq.nextval, ?, ?, ?) ";
+				+ "(sample_boards_seq.nextval, ?, ?, ?, ?) ";
 		
-		daoHelper.insert(sql, board.getTitle(), board.getWriter().getNo(), board.getContent());
+		daoHelper.insert(sql, board.getTitle(), board.getWriter().getNo(), board.getContent(), board.getFilename());
 	}
 
 	
