@@ -1,3 +1,5 @@
+<%@page import="util.PasswordUtil"%>
+<%@page import="org.apache.commons.codec.digest.DigestUtils"%>
 <%@page import="vo.User"%>
 <%@page import="dao.UserDao"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
@@ -31,13 +33,13 @@
 	}
 	
 	// 요청파라미터에서 나머지 회원가입 입력정보 조회하기
-	String password = request.getParameter("password");
+	String secretPassword = PasswordUtil.generateSecretPassword(id, request.getParameter("password"));
 	String name = request.getParameter("name");
 
 	// 중복 검사 완료 시 사용자 정보 저장, 회원가입 완료
 	User user = new User();
 	user.setId(id);
-	user.setPassword(password);
+	user.setPassword(secretPassword);
 	user.setName(name);
 	user.setEmail(email);
 	

@@ -57,19 +57,11 @@
 			%>
 			<p>
 				게시글 목록을 확인하세요
-				<!-- 
-					비로그인 상태에서는 아래 새 글쓰기 버튼을 비활성화한다.
-					class 속성에 disabled를 추가하면 비활성화된다.
-				--> 
-			<%
-				User user = (User) session.getAttribute("loginUser");
-			%>
-				<a href="form.jsp" class="btn btn-primary btn-sm float-end <%=user==null ? "disabled" : "" %>" >새 글쓰기</a>
-			<p>
-			
+			</p>
 			<table class="table">
 				<colgroup>
 					<col width="5%">
+					<col width="10%">
 					<col width="%">
 					<col width="10%">
 					<col width="10%">
@@ -79,6 +71,7 @@
 				<thead>
 					<tr>
 						<th>번호</th>
+						<th>카테고리</th>
 						<th>제목</th>
 						<th>작성자</th>
 						<th>조회수</th>
@@ -92,6 +85,7 @@
 				%>
 					<tr>
 						<td><%=board.getNo() %></td>
+						<td><%=board.getCategory().getName() %></td>
 						<td><a href="detail.jsp?no=<%=board.getNo() %>&page=<%=currentPage %>"><%=board.getTitle() %></a></td>
 						<td><%=board.getWriter().getName() %></td>
 						<td><%=board.getViewCount() %></td>
@@ -106,7 +100,17 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="col">
+		<div class="col-4">
+				<!-- 
+					비로그인 상태에서는 아래 새 글쓰기 버튼을 비활성화한다.
+					class 속성에 disabled를 추가하면 비활성화된다.
+				--> 
+			<%
+				User user = (User) session.getAttribute("loginUser");
+			%>
+				<a href="form.jsp" class="btn btn-primary btn-sm <%=user==null ? "disabled" : "" %>" >새 글쓰기</a>		
+		</div>
+		<div class="col-4">
 			<!--  
 				요청한 페이지번호에 맞는 페이지번호를 출력한다.
 				요청한 페이지번호와 일치하는 페이지번호는 하이라이트 시킨다.
@@ -132,6 +136,19 @@
 					</li>
 				</ul>
 			</nav>
+		</div>
+		<div class="col-4">
+			<form id="search-form" class="row g-3" method="get" action="list.jsp">
+				<input type="hidden" name="page" />
+				<input type="hidden" name="rows" />
+				<div class="col-9">
+					<!-- 이전에 입력했던 값을 value에 담아둬서 다음 요청에도 유지되게 한다. -->
+					<input class="form-control" type="text" name="keyword" value="" placeholder="검색어를 입력하세요."/>
+				</div>
+				<div class="col-3">
+					<button type="button" class="btn btn-outline-primary" onclick="searchKeyword();">검색</button>
+				</div>
+			</form>
 		</div>
 	</div>
 </div>

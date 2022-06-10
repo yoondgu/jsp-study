@@ -5,7 +5,7 @@
 	String menu = request.getParameter("menu");
 
 	// 세션객체에 저장된 사용자정보를 조회한다.
-	User user = (User) session.getAttribute("LOGINED_USER");
+	User user = (User) session.getAttribute("loginUser");
 %>
 <nav class="navbar navbar-expand-lg navbar navbar-dark bg-dark mb-3 ">
 	<div class="container">

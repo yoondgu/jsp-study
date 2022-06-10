@@ -1,3 +1,5 @@
+<%@page import="util.PasswordUtil"%>
+<%@page import="org.apache.commons.codec.digest.DigestUtils"%>
 <%@page import="vo.User"%>
 <%@page import="dao.UserDao"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
@@ -24,8 +26,10 @@
 		return;
 	}
 	
+	
 	// 비밀번호 불일치 조회
-	if (!user.getPassword().equals(password)) {
+	String secretPassword = PasswordUtil.generateSecretPassword(id, password);
+	if (!user.getPassword().equals(secretPassword)) {
 		response.sendRedirect("loginform.jsp?fail=invalid");
 		return;
 	}
