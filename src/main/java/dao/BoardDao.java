@@ -6,6 +6,7 @@ import java.util.List;
 import helper.DaoHelper;
 import vo.Board;
 import vo.BoardLikeUser;
+import vo.Category;
 import vo.User;
 
 public class BoardDao {
@@ -59,18 +60,25 @@ public class BoardDao {
 	
 	// 범위로 게시물 조회하기 (board_deleted는 'N')
 	public List<Board> getBoards(int beginIndex, int endIndex) throws SQLException {
-		String sql = "SELECT B.BOARD_NO, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE "
+		String sql = "SELECT B.BOARD_NO, B.CATEGORY_NO, C.CATEGORY_NAME, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE "
 				+ "FROM (SELECT ROW_NUMBER() OVER (ORDER BY BOARD_NO DESC) ROW_NUMBER, "
-				+ "        BOARD_NO, BOARD_TITLE, WRITER_NO, BOARD_CONTENT, BOARD_VIEW_COUNT, BOARD_LIKE_COUNT, BOARD_CREATED_DATE "
+				+ "        BOARD_NO, CATEGORY_NO, BOARD_TITLE, WRITER_NO, BOARD_CONTENT, BOARD_VIEW_COUNT, BOARD_LIKE_COUNT, BOARD_CREATED_DATE "
 				+ "        FROM SAMPLE_BOARDS "
-				+ "        WHERE BOARD_DELETED = 'N') B, SAMPLE_BOARD_USERS U "
+				+ "        WHERE BOARD_DELETED = 'N') B, SAMPLE_BOARD_USERS U, SAMPLE_BOARD_CATEGORIES C "
 				+ "WHERE B.WRITER_NO = U.USER_NO "
+				+ "AND B.CATEGORY_NO = C.CATEGORY_NO "
 				+ "AND ROW_NUMBER >= ? AND ROW_NUMBER <= ?";
 		
 
 		return daoHelper.selectList(sql, rs -> {
 			Board board = new Board();
 			board.setNo(rs.getInt("board_no"));
+			
+			Category category = new Category();
+			category.setNo(rs.getInt("category_no"));
+			category.setName(rs.getString("category_name"));
+			board.setCategory(category);
+			
 			board.setTitle(rs.getString("board_title"));
 			
 			User user = new User();
@@ -89,15 +97,22 @@ public class BoardDao {
 	
 	// 번호로 게시물 정보 조회하기
 	public Board getBoard(int no) throws SQLException {
-		String sql =  "SELECT B.BOARD_NO, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE, B.BOARD_FILE_NAME "
-				+ "FROM SAMPLE_BOARDS B, SAMPLE_BOARD_USERS U "
+		String sql =  "SELECT B.BOARD_NO, B.CATEGORY_NO, C.CATEGORY_NAME, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE, B.BOARD_FILE_NAME "
+				+ "FROM SAMPLE_BOARDS B, SAMPLE_BOARD_USERS U, SAMPLE_BOARD_CATEGORIES C "
 				+ "WHERE B.BOARD_NO = ? "
-				+ "AND B.WRITER_NO = U.USER_NO ";
+				+ "AND B.WRITER_NO = U.USER_NO "
+				+ "AND B.CATEGORY_NO = C.CATEGORY_NO ";
 		
 
 		return daoHelper.selectOne(sql, rs -> {
 			Board board = new Board();
 			board.setNo(rs.getInt("board_no"));
+			
+			Category category = new Category();
+			category.setNo(rs.getInt("category_no"));
+			category.setName(rs.getString("category_name"));
+			board.setCategory(category);
+			
 			board.setTitle(rs.getString("board_title"));
 			
 			User user = new User();
@@ -118,11 +133,11 @@ public class BoardDao {
 	// 게시물 등록하기
 	public void insertBoard(Board board) throws SQLException {
 		String sql = "insert into sample_boards "
-				+ "(board_no, board_title, writer_no, board_content, board_file_name) "
+				+ "(board_no, board_title, writer_no, board_content, board_file_name, category_no) "
 				+ "values "
-				+ "(sample_boards_seq.nextval, ?, ?, ?, ?) ";
+				+ "(sample_boards_seq.nextval, ?, ?, ?, ?, ?) ";
 		
-		daoHelper.insert(sql, board.getTitle(), board.getWriter().getNo(), board.getContent(), board.getFilename());
+		daoHelper.insert(sql, board.getTitle(), board.getWriter().getNo(), board.getContent(), board.getFilename(), board.getCategory().getNo());
 	}
 
 	

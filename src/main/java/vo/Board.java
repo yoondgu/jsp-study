@@ -14,6 +14,7 @@ public class Board {
 	private Date createdDate;
 	private Date updatedDate;
 	private String filename;
+	private Category category;
 	
 	public Board() {}
 
@@ -99,6 +100,14 @@ public class Board {
 	
 	public void setFilename(String filename) {
 		this.filename = filename;
+	}
+	
+	public Category getCategory() {
+		return category;
+	}
+	
+	public void setCategory(Category category) {
+		this.category = category;
 	}
 	
 }

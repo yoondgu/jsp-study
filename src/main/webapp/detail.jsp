@@ -71,7 +71,9 @@
 				<tbody>
 					<tr>
 						<th class="table-light text-center">제목</th>
-						<td colspan="3"><%=board.getTitle() %></td>
+						<td><%=board.getTitle() %></td>
+						<th class="table-light text-center">카테고리</th>
+						<td><%=board.getCategory().getName() %></td>
 					</tr>
 					<tr>
 						<th class="table-light text-center">조회수</th>
