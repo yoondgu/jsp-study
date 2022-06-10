@@ -46,7 +46,7 @@ public class MultipartRequest {
 	| 
 	------------------------------------------------------------------------------------------
 	
-	분석이 완료된 정보 (최종적으로 저장된 내용)
+	분석이 완료된 정보
 	parameters -> {
 		KEY				VALUES
 		---------------------------------------------------------------
@@ -103,6 +103,9 @@ public class MultipartRequest {
 	 */
 	public String getParameter(String name) {
 		List<String> values = parameters.get(name);
+		if (values == null) {
+			return null;
+		}
 		if (values.isEmpty()) {
 			return null;
 		}
@@ -116,6 +119,9 @@ public class MultipartRequest {
 	 */
 	public String[] getParameterValues(String name) {
 		List<String> values = parameters.get(name);
+		if (values == null) {
+			return null;
+		}
 		if (values.isEmpty()) {
 			return null;
 		}
