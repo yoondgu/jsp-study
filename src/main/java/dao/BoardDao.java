@@ -57,6 +57,17 @@ public class BoardDao {
 			return rs.getInt("cnt");
 		});
 	}
+
+	public int getTotalRowCount(String keyword) throws SQLException {
+		String sql = "select count(*) cnt "
+				+ "from sample_boards "
+				+ "where board_deleted = 'N' "
+				+ "and board_title like '%' || ? || '%'";
+		
+		return daoHelper.selectOne(sql, rs -> {
+			return rs.getInt("cnt");
+		}, keyword);
+	}
 	
 	// 범위로 게시물 조회하기 (board_deleted는 'N')
 	public List<Board> getBoards(int beginIndex, int endIndex) throws SQLException {
@@ -67,7 +78,8 @@ public class BoardDao {
 				+ "        WHERE BOARD_DELETED = 'N') B, SAMPLE_BOARD_USERS U, SAMPLE_BOARD_CATEGORIES C "
 				+ "WHERE B.WRITER_NO = U.USER_NO "
 				+ "AND B.CATEGORY_NO = C.CATEGORY_NO "
-				+ "AND ROW_NUMBER >= ? AND ROW_NUMBER <= ?";
+				+ "AND ROW_NUMBER >= ? AND ROW_NUMBER <= ? "
+				+ "ORDER BY B.ROW_NUMBER ";
 		
 
 		return daoHelper.selectList(sql, rs -> {
@@ -93,6 +105,44 @@ public class BoardDao {
 			board.setDeleted("N");
 			return board;
 		}, beginIndex, endIndex);
+	}
+	
+	// 범위로 게시물 검색하기
+	// 키워드 조건은 서브쿼리 안에서 넣어야 한다**
+	public List<Board> getBoards(String keyword, int beginIndex, int endIndex) throws SQLException {
+		String sql = "SELECT B.BOARD_NO, B.CATEGORY_NO, C.CATEGORY_NAME, B.BOARD_TITLE, B.WRITER_NO, U.USER_NAME, B.BOARD_CONTENT, B.BOARD_VIEW_COUNT, B.BOARD_LIKE_COUNT, B.BOARD_CREATED_DATE "
+				+ "FROM (SELECT ROW_NUMBER() OVER (ORDER BY BOARD_NO DESC) ROW_NUMBER, "
+				+ "        BOARD_NO, CATEGORY_NO, BOARD_TITLE, WRITER_NO, BOARD_CONTENT, BOARD_VIEW_COUNT, BOARD_LIKE_COUNT, BOARD_CREATED_DATE "
+				+ "        FROM SAMPLE_BOARDS "
+				+ "        WHERE BOARD_DELETED = 'N' AND BOARD_TITLE LIKE '%' || ? || '%') B, SAMPLE_BOARD_USERS U, SAMPLE_BOARD_CATEGORIES C "
+				+ "WHERE B.WRITER_NO = U.USER_NO "
+				+ "AND B.CATEGORY_NO = C.CATEGORY_NO "
+				+ "AND ROW_NUMBER >= ? AND ROW_NUMBER <= ? "
+				+ "ORDER BY B.ROW_NUMBER ";
+		
+		return daoHelper.selectList(sql, rs -> {
+			Board board = new Board();
+			board.setNo(rs.getInt("board_no"));
+			
+			Category category = new Category();
+			category.setNo(rs.getInt("category_no"));
+			category.setName(rs.getString("category_name"));
+			board.setCategory(category);
+			
+			board.setTitle(rs.getString("board_title"));
+			
+			User user = new User();
+			user.setNo(rs.getInt("writer_no"));
+			user.setName(rs.getString("user_name"));
+			board.setWriter(user);
+			
+			board.setContent(rs.getString("board_content"));
+			board.setViewCount(rs.getInt("board_view_count"));
+			board.setLikeCount(rs.getInt("board_like_count"));
+			board.setCreatedDate(rs.getDate("board_created_date"));
+			board.setDeleted("N");
+			return board;
+		}, keyword, beginIndex, endIndex);
 	}
 	
 	// 번호로 게시물 정보 조회하기
